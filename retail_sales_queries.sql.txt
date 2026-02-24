@@ -1,0 +1,196 @@
+CREATE DATABASE retail_project;
+USE retail_project;
+
+
+DESCRIBE retail_sales;
+ALTER TABLE retail_sales
+MODIFY order_date date,
+MODIFY ship_date date;
+
+
+-- LEVEL 1 ------
+-- Top 10 rows show karo
+SELECT *
+FROM retail_sales
+Limit 10;
+
+-- Sirf selected columns show karo
+SELECT order_id, order_date, customer_name, product
+FROM retail_sales;
+
+-- Unique cities list karo
+SELECT DISTINCT city
+FROM retail_sales;
+
+-- Profit > 1300 wale orders
+SELECT *
+FROM retail_sales
+WHERE profit > 1300;
+
+-- Technology category aur quantity > 2
+SELECT *
+FROM retail_sales
+WHERE category = "Technology" AND quantity > 5;
+
+-- Sales between 3000 & 4000
+SELECT *
+FROM retail_sales
+WHERE sales BETWEEN 3000 AND 4000;
+
+-- Category IN Office supplies, Furniture
+SELECT *
+FROM retail_sales
+WHERE category IN ("Office supplies", "Furniture");
+
+-- Customer name starts with 'A'
+SELECT *
+FROM retail_sales
+WHERE customer_name LIKE "A%";
+
+-- Highest sales orders
+SELECT *
+FROM retail_sales
+ORDER BY sales DESC;
+
+-- Oldest orders first
+SELECT *
+FROM retail_sales
+ORDER BY Order_date;
+
+-- LEVEL 2 ------
+-- Total sales
+SELECT SUM(sales) AS total_sales
+FROM retail_sales;
+
+-- Total quantity sold
+SELECT SUM(quantity) AS total_quantity
+FROM retail_sales;
+
+-- Average profit value
+SELECT SUM(Profit) AS average_profit_sales
+FROM retail_sales;
+
+-- Day wise total sales
+SELECT order_date, SUM(sales) AS daily_sales
+FROM retail_sales
+GROUP BY order_date
+ORDER BY order_date;
+
+-- Month wise sales
+SELECT Month(order_date) AS month, SUM(sales) AS monthly_sales
+FROM retail_sales
+GROUP BY Month(order_date)
+ORDER BY month;
+
+-- Category wise revenue
+SELECT category, SUM(sales) AS category_sales
+FROM retail_sales
+GROUP BY category
+ORDER BY category_sales DESC;
+
+-- Top 5 selling products
+SELECT product, SUM(quantity) AS total_sold
+FROM retail_sales
+GROUP BY product
+ORDER BY total_sold DESC
+Limit 5;
+
+-- Least selling products
+SELECT product, SUM(quantity) AS total_sold
+FROM retail_sales
+GROUP BY product
+ORDER BY total_sold ASC
+Limit 5;
+
+-- City wise revenue
+SELECT city, SUM(sales) AS city_sales
+FROM retail_sales
+GROUP BY city
+ORDER BY city_sales DESC;
+
+-- Top 5 customers by spend
+SELECT customer_name, SUM(quantity) AS quantity_spent
+FROM retail_sales
+GROUP BY customer_name
+ORDER BY quantity_spent DESC
+Limit 5;
+
+-- LEVEL 3-----
+-- Orders above average sale
+SELECT *
+FROM retail_sales
+WHERE sales > 
+	(SELECT AVG(sales) FROM retail_sales);
+    
+-- Sales Category Classification (Low / Medium / High)
+SELECT *,
+CASE 
+    WHEN sales < 500 THEN 'Low'
+    WHEN sales BETWEEN 500 AND 2000 THEN 'Medium'
+    ELSE 'High'
+END AS sales_category
+FROM retail_sales
+ORDER BY sales DESC;
+
+-- Customer Order Frequency Analysis
+SELECT customer_name, COUNT(order_id) AS total_orders
+FROM retail_sales
+GROUP BY customer_name
+ORDER BY total_orders DESC;
+
+-- Category-wise Average Profit
+SELECT category, AVG(Profit) AS avg_profit
+FROM retail_sales
+GROUP BY category
+ORDER BY avg_profit DESC;
+
+-- City-wise Profit Ranking
+SELECT *,
+CASE
+    WHEN profit < 500 THEN "LOW"
+    WHEN profit BETWEEN 500 AND 1000 THEN "MEDIUM"
+    ELSE "HIGH"
+END AS ranking_profit
+FROM retail_sales
+ORDER BY profit DESC;
+
+SELECT city, SUM(profit) AS total_profit
+FROM retail_sales
+GROUP BY city
+ORDER BY total_profit DESC;
+
+-- Best Selling Product in Each Category
+SELECT category, product, total_qty
+FROM (
+    SELECT category, product,
+           SUM(quantity) AS total_qty,
+           RANK() OVER (PARTITION BY category ORDER BY SUM(quantity) DESC) AS rnk
+    FROM retail_sales
+    GROUP BY category, product
+) t
+WHERE rnk = 1;
+
+-- Weekday Sales Performance
+SELECT DAYNAME(order_date) AS weekday, SUM(sales) AS total_sales
+FROM retail_sales
+GROUP BY weekday
+ORDER BY total_sales DESC;
+
+-- Running Total Sales (Cumulative Growth Tracking)
+SELECT order_date,
+       SUM(sales) OVER (ORDER BY order_date) AS running_total_sales
+FROM retail_sales;
+
+-- Customer First & Last Purchase Date
+SELECT customer_name,
+            MIN(order_date) AS first_date,
+            MAX(order_date) AS last_date
+FROM retail_sales
+GROUP BY customer_name;
+
+-- Category-wise Average Selling Price per Unit
+SELECT category,
+       ROUND(SUM(sales)/SUM(quantity),2) AS avg_price_per_unit
+FROM retail_sales
+GROUP BY category;
+
